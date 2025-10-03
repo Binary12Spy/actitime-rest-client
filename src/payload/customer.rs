@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-use crate::date_formatter::date_format;
+use crate::{date_formatter::date_format, payload::PayloadTrait};
 
 /// Workflow status model representing a status in a workflow
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -21,4 +21,14 @@ pub struct Customer {
     /// Description of the project
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+}
+
+impl PayloadTrait for Customer {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap()
+    }
+
+    fn from_json(json_str: &str) -> Self {
+        serde_json::from_str(json_str).unwrap()
+    }
 }

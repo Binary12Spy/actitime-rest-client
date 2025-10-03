@@ -1,6 +1,8 @@
-use crate::client_context::ClientContext;
-use crate::errors::ClientError;
-use crate::payload::{ApiError, TaskList, enums::TaskStatus};
+use crate::payload::{
+    TaskList,
+    enums::{Method, TaskStatus},
+};
+use crate::routes::Route;
 
 pub enum GetTasksSortOrder {
     CreatedAsc,
@@ -56,6 +58,88 @@ pub struct GetTasksParameters {
     pub status: Option<TaskStatus>,
     /// Include referenced entities in the response
     pub include_referenced: Option<Vec<GetTasksIncludeReferenced>>,
+}
+
+impl GetTasksParameters {
+    pub fn new() -> Self {
+        Self {
+            offset: None,
+            limit: None,
+            task_ids: None,
+            customer_ids: None,
+            project_ids: None,
+            type_of_work_ids: None,
+            workflow_status_ids: None,
+            sort_order: None,
+            name_filter: None,
+            contains_words: None,
+            status: None,
+            include_referenced: None,
+        }
+    }
+
+    pub fn with_offset(mut self, offset: u32) -> Self {
+        self.offset = Some(offset);
+        self
+    }
+
+    pub fn with_limit(mut self, limit: u32) -> Self {
+        self.limit = Some(limit);
+        self
+    }
+
+    pub fn with_task_ids(mut self, task_ids: Vec<u32>) -> Self {
+        self.task_ids = Some(task_ids);
+        self
+    }
+
+    pub fn with_customer_ids(mut self, customer_ids: Vec<u32>) -> Self {
+        self.customer_ids = Some(customer_ids);
+        self
+    }
+
+    pub fn with_project_ids(mut self, project_ids: Vec<u32>) -> Self {
+        self.project_ids = Some(project_ids);
+        self
+    }
+
+    pub fn with_type_of_work_ids(mut self, type_of_work_ids: Vec<u32>) -> Self {
+        self.type_of_work_ids = Some(type_of_work_ids);
+        self
+    }
+
+    pub fn with_workflow_status_ids(mut self, workflow_status_ids: Vec<u32>) -> Self {
+        self.workflow_status_ids = Some(workflow_status_ids);
+        self
+    }
+
+    pub fn with_sort_order(mut self, sort_order: GetTasksSortOrder) -> Self {
+        self.sort_order = Some(sort_order);
+        self
+    }
+
+    pub fn with_name_filter(mut self, name_filter: String) -> Self {
+        self.name_filter = Some(name_filter);
+        self
+    }
+
+    pub fn with_contains_words(mut self, contains_words: String) -> Self {
+        self.contains_words = Some(contains_words);
+        self
+    }
+
+    pub fn with_status(mut self, status: TaskStatus) -> Self {
+        self.status = Some(status);
+        self
+    }
+
+    pub fn with_include_referenced(
+        mut self,
+        include_referenced: Vec<GetTasksIncludeReferenced>,
+    ) -> Self {
+        self.include_referenced = Some(include_referenced);
+        self
+    }
 }
 
 impl Into<String> for GetTasksParameters {
@@ -149,11 +233,8 @@ impl Into<String> for GetTasksParameters {
     }
 }
 
-pub fn get_tasks(
-    client_context: &ClientContext,
-    parameters: Option<GetTasksParameters>,
-) -> Result<TaskList, ClientError> {
-    let mut url = format!("{}/tasks?", client_context.base_url);
+pub fn get_tasks(parameters: Option<GetTasksParameters>) -> Route<(), TaskList> {
+    let mut url: String = "/tasks?".into();
 
     if let Some(params) = parameters {
         let query_string: String = params.into();
@@ -162,26 +243,5 @@ pub fn get_tasks(
         url.push_str("offset=0&limit=100");
     }
 
-    if client_context.basic_auth_token.is_none() {
-        return Err(ClientError::Unauthorized);
-    }
-
-    let response = client_context
-        .http_client
-        .get(&url)
-        .send()
-        .map_err(ClientError::Reqwest)?;
-
-    let status_code = response.status().as_u16();
-    let text = response.text().map_err(ClientError::Reqwest)?;
-    match status_code {
-        200 => {
-            let user = TaskList::from_json(&text).map_err(ClientError::SerdeJson)?;
-            Ok(user)
-        }
-        _ => {
-            let api_error = ApiError::from_json(&text).map_err(ClientError::SerdeJson)?;
-            Err(ClientError::ApiError(status_code, api_error))
-        }
-    }
+    Route::new(Method::GET, url.as_str())
 }

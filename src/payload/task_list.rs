@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::payload::{Customer, Project, Task, TypeOfWork, WorkflowStatus};
+use crate::payload::{Customer, PayloadTrait, Project, Task, TypeOfWork, WorkflowStatus};
 
 /// Task list model representing a list of tasks
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,9 +22,12 @@ pub struct TaskList {
     pub workflow_statuses: Option<Vec<WorkflowStatus>>,
 }
 
-impl TaskList {
-    /// Create a TaskList from a JSON string
-    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(json)
+impl PayloadTrait for TaskList {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap()
+    }
+
+    fn from_json(json_str: &str) -> Self {
+        serde_json::from_str(json_str).unwrap()
     }
 }

@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::payload::PayloadTrait;
+
 /// API Error model representing an error response from the API
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -16,8 +18,12 @@ pub struct ApiError {
     pub fields: Option<String>,
 }
 
-impl ApiError {
-    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(json)
+impl PayloadTrait for ApiError {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap()
+    }
+
+    fn from_json(json_str: &str) -> Self {
+        serde_json::from_str(json_str).unwrap()
     }
 }

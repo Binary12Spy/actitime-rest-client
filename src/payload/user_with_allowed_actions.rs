@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::date_formatter::date_format_option;
 use crate::payload::AllowedActions;
+use crate::payload::PayloadTrait;
 use crate::payload::User;
 
 /// User model representing an ActiTime user
@@ -118,6 +119,16 @@ impl UserWithAllowedActions {
 
     pub fn from_json(json_str: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json_str)
+    }
+}
+
+impl PayloadTrait for UserWithAllowedActions {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap()
+    }
+
+    fn from_json(json_str: &str) -> Self {
+        serde_json::from_str(json_str).unwrap()
     }
 }
 

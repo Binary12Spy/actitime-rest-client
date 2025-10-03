@@ -1,7 +1,12 @@
 mod allowed_actions;
 mod api_error;
+mod batch_request_item;
 mod customer;
+/// Enumerations used in the ActiTime API
 pub mod enums;
+mod leave_type;
+mod pagination_listing;
+mod payload_trait;
 mod project;
 mod schedule;
 mod task;
@@ -15,7 +20,11 @@ mod workflow_status;
 
 pub use allowed_actions::AllowedActions;
 pub use api_error::ApiError;
+pub use batch_request_item::BatchRequestItem;
 pub use customer::Customer;
+pub use leave_type::LeaveType;
+pub use pagination_listing::PaginationListing;
+pub use payload_trait::PayloadTrait;
 pub use project::Project;
 pub use schedule::Schedule;
 pub use task::Task;

@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-use crate::date_formatter::date_format;
+use crate::{date_formatter::date_format, payload::PayloadTrait};
 
 /// Schedule model representing a user's work schedule
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,8 +19,12 @@ pub struct Schedule {
     pub entries: Vec<u32>,
 }
 
-impl Schedule {
-    pub fn from_json(json_data: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(json_data)
+impl PayloadTrait for Schedule {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap()
+    }
+
+    fn from_json(json_str: &str) -> Self {
+        serde_json::from_str(json_str).unwrap()
     }
 }

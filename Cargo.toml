@@ -7,8 +7,17 @@ edition = "2024"
 base64 = "0.22.1"
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
-reqwest = { version = "0.12", features = ["blocking"] }
+reqwest = { version = "0.12", features = ["blocking", "json"] }
 serde_json = "1.0"
 
 [dev-dependencies]
 serde_json = "1.0"
+
+[lints.rust]
+missing_docs = "deny"
+unused_must_use = "deny"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

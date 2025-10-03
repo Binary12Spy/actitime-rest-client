@@ -2,6 +2,7 @@ use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 use crate::date_formatter::date_format;
+use crate::payload::PayloadTrait;
 
 /// Project model representing a project in ActiTime
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,4 +26,14 @@ pub struct Project {
     /// Description of the project
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+}
+
+impl PayloadTrait for Project {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap()
+    }
+
+    fn from_json(json_str: &str) -> Self {
+        serde_json::from_str(json_str).unwrap()
+    }
 }

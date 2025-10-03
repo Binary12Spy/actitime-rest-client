@@ -1,9 +1,9 @@
-use std::default;
-
 use base64::engine::{Engine, general_purpose::STANDARD as BASE64_STANDARD};
 use reqwest::blocking::Client as HttpClient;
 
-use crate::payload::User;
+use crate::errors::ClientError;
+use crate::payload::{ApiError, User, enums::Method};
+use crate::routes::Route;
 
 pub struct ClientContext {
     pub organization: String,
@@ -58,5 +58,52 @@ impl ClientContext {
 
     pub fn set_user_information(&mut self, user: User) {
         self.user_information = Some(user);
+    }
+
+    pub fn call_route<PayloadType, ResponseType>(
+        &self,
+        client_context: &ClientContext,
+        route: &Route<PayloadType, ResponseType>,
+        payload: Option<&PayloadType>,
+    ) -> Result<ResponseType, crate::errors::ClientError>
+    where
+        PayloadType: serde::Serialize + serde::de::DeserializeOwned,
+        ResponseType: serde::Serialize + serde::de::DeserializeOwned,
+    {
+        if client_context.basic_auth_token.is_none() {
+            return Err(ClientError::Unauthorized);
+        }
+
+        let url = format!("{}{}", self.base_url, route.relative_path);
+        let request_builder = match route.method {
+            Method::GET => self.http_client.get(&url),
+            Method::POST => self.http_client.post(&url),
+            Method::PUT => self.http_client.put(&url),
+            Method::DELETE => self.http_client.delete(&url),
+            Method::PATCH => self.http_client.patch(&url),
+        };
+
+        let request_builder = if let Some(ref payload) = payload {
+            request_builder.json(payload)
+        } else {
+            request_builder
+        };
+
+        let response = request_builder.send().map_err(ClientError::Reqwest)?;
+
+        let response_code = response.status().as_u16();
+        if response.status().is_success() {
+            let response_json = response.json().map_err(ClientError::Reqwest)?;
+            let response = serde_json::from_value(response_json).map_err(ClientError::SerdeJson)?;
+            Ok(response)
+        } else {
+            let response_json = response.text().unwrap_or_default();
+            if !response_json.is_empty() {
+                return Err(ClientError::Message(response_json));
+            }
+            let error =
+                serde_json::from_str::<ApiError>(&response_json).map_err(ClientError::SerdeJson)?;
+            Err(ClientError::ApiError(response_code, error))
+        }
     }
 }

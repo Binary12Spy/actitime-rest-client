@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-use crate::date_formatter::date_format_option;
+use crate::{date_formatter::date_format_option, payload::PayloadTrait};
 
 /// User model representing an ActiTime user
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,6 +44,16 @@ pub struct UserWithPassword {
     pub middle_name: Option<String>,
     /// Last name of user
     pub last_name: String,
+}
+
+impl PayloadTrait for UserWithPassword {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap()
+    }
+
+    fn from_json(json_str: &str) -> Self {
+        serde_json::from_str(json_str).unwrap()
+    }
 }
 
 impl UserWithPassword {
